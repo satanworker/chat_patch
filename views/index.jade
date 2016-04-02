@@ -1,0 +1,16 @@
+extends layout
+block content
+  form#reg.forms_log
+    input(name="login" placeholder="login")
+    input(name="password" placeholder="password")
+    input(type="submit" value="registr")
+  form#auth.forms_log
+    input(name="login" placeholder="login")
+    input(name="password" placeholder="password")
+    input(type="submit" value="auth")
+  a(href="#")#logout.logout Выйти
+  div#text_messages
+  form#message.messages
+    p.name
+    input(name="message").message
+    input(type="submit" value="send")
