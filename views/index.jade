@@ -1,16 +1,48 @@
 extends layout
+
 block content
-  form#reg.forms_log
-    input(name="login" placeholder="login")
-    input(name="password" placeholder="password")
-    input(type="submit" value="registr")
-  form#auth.forms_log
-    input(name="login" placeholder="login")
-    input(name="password" placeholder="password")
-    input(type="submit" value="auth")
-  a(href="#")#logout.logout Выйти
-  div#text_messages
-  form#message.messages
-    p.name
-    input(name="message").message
-    input(type="submit" value="send")
+  div.row.tabs_container
+    div.col.s12.tabs
+      ul.tabs
+        li.tab.col.s3
+          a(href="#auth-tab").active Войти
+        li.tab.col.s3
+          a(href="#reg-tab") Регисистрация
+    div.col.s12#auth-tab
+      form#auth
+        div.input-field.col.s12
+          input.name(type="text" name="name" placeholder="Login")#log1.validate
+          label(for="log1") Login
+        div.input-field.col.s12
+          input.password(type="text" name="password" placeholder="Password")#pass1
+          label(for="pass1") Password
+          input(type="submit" value="войти").waves-effect.waves-light.btn
+    div.col.s12#reg-tab
+      form#reg
+        div.input-field.col.s12
+          input.name(type="text" name="name" placeholder="Login")#log2
+          label(for="log2") Login
+        div.input-field.col.s12
+          input.password(type="text" name="password" placeholder="Password")#pass2
+          label(for="pass2") Password
+          input(type="submit" value="зарегестрироваться").waves-effect.waves-light.btn
+  div.row
+    div.col.s10
+      ul#chat
+    div.col.s2
+      p#onlineUsers
+      img(src="http://walkforwhatfor.com/wp-content/uploads/2014/03/awesome-black-and-white-garage-rock-girl-Favim.com-585178_original.jpg").girl
+  div.row
+    div.col.s1
+      p#title
+    div.col.s11
+      p#typing
+      form#message
+        input(type="text" name="message")
+        button.waves-effect.waves-light.btn
+          span Отправить собщение
+  //div#pm
+  //form.pmmessage(data-to="user:dima")
+  //  span.description
+  //  input(type="text" name="message")
+  //  input(type="submit" value="submit")

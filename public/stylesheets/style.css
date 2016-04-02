@@ -6,9 +6,41 @@ body {
 a {
   color: #00B7FF;
 }
-.logout {
-  display: none;
+
+#chat {
+  max-height: 400px;
+  overflow: auto;
 }
-.messages {
-  display: none;
+.pmmessage {
+  border: 1px solid red;
+}
+.tabs_container {
+  max-width: 400px;
+  margin: 0 auto;
+}
+.collection-item {
+  display: inline-block;
+  width: auto;
+  padding: 9px 17px;
+  border-radius: 15px;
+  background: #2bbbad;
+  color: #fff;
+  margin: 10px 0;
+  float:left;
+  clear:both;
+}
+.collection-item .title{
+  font-weight:bold;
+  border-bottom: 1px solid white;
+}
+
+.girl{
+  width:100%;
+}
+
+.collection-item.my
+{
+  background: #18524D;
+  float:right;
+  clear:both;
 }

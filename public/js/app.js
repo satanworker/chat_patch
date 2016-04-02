@@ -1,103 +1,158 @@
 /**
- * Created by mini on 26.02.16.
+ * Created by mini on 08.03.16.
  */
-function messageTemplate(message, user){
-    console.log(message, user);
-    var temp = '<p><b>'+user.login+'</b>: <span>'+message.text+'</span></p>'
-    return temp;
-}
-
-function auth(data) {
-    $.post( "/auth", data).done(function( data ) {
-        data =  JSON.parse(data);
-        if(data.length) {
-            logIn();
-            $('.name').text(data[0].login);
-        }
-    });
-}
-function logIn () {
-    $('.forms_log').hide();
-    $('.logout').show();
-    $('.messages').show();
-    subscribe();
-}
-function logOut () {
-    $.post('/auth', {"logout": 'Y'}).done(function() {
-        $('.forms_log').show();
-        $('.logout').hide();
-        $('.messages').hide();
-    });
-}
-function subscribe () {
-    console.log('start polling');
-    $.ajax({
-        type: 'GET',
-        url: '/sub',
-        success: function(data){
-            data =  JSON.parse(data);
-            console.log('stop polling', data);
-            $('#text_messages').append(messageTemplate(data.message, data.user));
-            subscribe();
-        }
-    });
-}
-
-function publish (message) {
-    $.ajax({
-        type: 'POST',
-        url: '/pub',
-        data: {"message": message}
-    });
-}
-
 $(document).ready(function() {
+    var socket = io();
     $('#reg').submit(function(event) {
         event.preventDefault();
-        var reg_data = $(this).serialize();
-        $.post( "/reg", reg_data)
-            .done(function( data ) {
-                data = JSON.parse(data);
-                if(data.error) {
-                    alert(data.error);
-                }
-                else {
-                   auth({});
-                }
-                console.log(data);
-            });
-    });
-    $('.logout').click(function(event) {
-        event.preventDefault();
-        logOut();
+        if(this.name.value.length && this.password.value.length) {
+            var obj = {
+                login: this.name.value,
+                pass: this.password.value
+            };
+            obj = JSON.stringify(obj);
+            socket.emit('reg', obj);
+            this.name.value = '';
+            this.password.value = '';
+        }
     });
     $('#auth').submit(function(event) {
         event.preventDefault();
-        var auth_data = $(this).serialize();
-        $.post( "/auth", auth_data)
-            .done(function( data ) {
-                data = JSON.parse(data);
-                if(data.error) {
-                    alert(data.error);
-                }
-                else {
-                    logIn();
-                    $('.name').text(data[0].login);
-                }
+        if(this.name.value.length && this.password.value.length) {
+            var obj = {
+                login: this.name.value,
+                pass: this.password.value
+            };
+            obj = JSON.stringify(obj);
+            socket.emit('auth', obj);
+            this.name.value = '';
+            this.password.value = '';
+        }
+    });
+    $('#message').submit(function(event) {
+        event.preventDefault();
+        var obj = {
+            message: this.message.value
+        };
+        obj = JSON.stringify(obj);
+        socket.emit('message', obj);
+        this.message.value = '';
+
+    });
+
+    $('.pmmessage').submit(function(event) {
+        event.preventDefault();
+        var obj = {
+            to: $(this).data('to'),
+            message: this.message.value
+        };
+        obj = JSON.stringify(obj);
+        socket.emit('message', obj);
+    });
+
+    var typing = false;
+    var timeoutID;
+    $('#message').find('input[type="text"]').keydown(function() {
+        clearTimeout(timeoutID);
+        timeoutID = setTimeout(function() {
+        typing = false;
+        socket.emit('typing', false);
+        console.log('end typing');
+        }, 1000);
+        if(!typing) {
+            console.log('start typing');
+            typing = true;
+            socket.emit('typing', true);
+        }
+    });
+    socket.on('updateOnline', function(data) {
+        data = JSON.parse(data);
+        var str = 'онлайн:'+' (' + data.onlineUsers.length + ') ';
+        data.onlineUsers.forEach(function(item) {
+            str += item.login + ', ';
+        });
+        $('#onlineUsers').text(str);
+        console.log(data);
+    });
+    socket.on('auth', function(data) {
+       data = JSON.parse(data);
+        if(data.callback) {
+            $('#title').text(data.login);
+            $('.tabs_container').hide();
+        }
+        else {
+            alert(data.message);
+        }
+    });
+    socket.on('message', function(data) {
+        data = JSON.parse(data);
+        var myclass ="";
+        console.log(data.user.login, $('#title').text(), $('#title').text()==data.user.login);
+        if(data.user.login==$('#title').text())
+        {
+            myclass="my";
+        }
+        else {
+            myclass ="";
+        }
+
+
+        $('#chat').append('<li class="collection-item '+myclass+'"><span class="title">'+ data.user.login + ':</span> <p>' + data.message + '</p></li> <br />');
+        $('#chat').scrollTop($('#chat')[0].scrollHeight);
+        console.log(data);
+    });
+    socket.on('customError', function(data) {
+        alert(data);
+    });
+    socket.on('loadMessages', function(data) {
+        data = JSON.parse(data);
+        var myclass ="";
+
+
+        data.forEach(function(data) {
+            console.log(data.user.login, $('#title').text(), $('#title').text()==data.user.login);
+            if(data.user.login==$('#title').text())
+            {
+                myclass="my";
+            }
+            else {
+                myclass="";
+            }
+            $('#chat').append('<li class="collection-item '+myclass+'"><span class="title">'+ data.user.login + ':</span> <p>' + data.message + '</p></li> <br />');
+        });
+        $('#chat').scrollTop($('#chat')[0].scrollHeight);
+    });
+    var typingPeople = [];
+    socket.on('typing', function(data) {
+        data =  JSON.parse(data);
+        console.log(data);
+        if(data.typing) {
+            typingPeople.push(data.login);
+        }
+        else {
+            var index = typingPeople.indexOf(data.login);
+            if(index > -1) {
+                typingPeople.splice(index, 1);
+            }
+        }
+        if(typingPeople.length) {
+            var str = '';
+            typingPeople.forEach(function(item) {
+               str += ' ' + item;
             });
+            if(typingPeople.length > 1) {
+                $('#typing').text('пацандре '+ str +' печатают, по царске')
+            }
+            else {
+                $('#typing').text('пацандре '+ str +' печатает, как царь')
+            }
+        }
+        else {
+            $('#typing').text('');
+        }
+
     });
-    auth();
-    //
-    $('.starPolling').click(function(event) {
-        event.preventDefault();
-        subscribe();
-    });
-    $('.stopPolling').click(function(event) {
-        event.preventDefault();
-        publish('messages');
-    });
-    $('#message').submit(function(event){
-        event.preventDefault();
-        publish(this.message.value);
-    });
+    ///>> materialize
+    $('ul.tabs').tabs();
+
 });
